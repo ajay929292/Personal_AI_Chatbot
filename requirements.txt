@@ -1,0 +1,6 @@
+langchain-core
+langchain-huggingface
+langchain-ollama
+langchain-text-splitters
+python-dotenv
+sentence-transformers
