@@ -1,4 +1,4 @@
-"""A minimal LCEL chatbot using Ollama."""
+"""A minimal LCEL chatbot using Google Gemini."""
 
 import os
 from datetime import datetime
@@ -15,24 +15,19 @@ from langchain_core.prompts import ChatPromptTemplate, MessagesPlaceholder
 from langchain_core.runnables import RunnableLambda
 from langchain_core.runnables.history import RunnableWithMessageHistory
 from langchain_core.tools import tool
+from langchain_google_genai import ChatGoogleGenerativeAI
 from langchain_huggingface import HuggingFaceEmbeddings
-from langchain_ollama import ChatOllama
 from langchain_text_splitters import RecursiveCharacterTextSplitter
 
 
 load_dotenv()
 
 
-model = ChatOllama(
-    # Uses this model when OLLAMA_MODEL is not set in .env.
-    model=os.getenv("OLLAMA_MODEL"),
-    base_url=os.getenv(
-        "OLLAMA_BASE_URL", os.getenv("OLLAMA_HOST")
-    ),
-    temperature=float(os.getenv("OLLAMA_TEMPERATURE")),
-    client_kwargs={
-        "headers": {"Authorization": f"Bearer {os.getenv('OLLAMA_API_KEY', '')}"}
-    },
+model = ChatGoogleGenerativeAI(
+    # Gemini 2.5 Flash is available on the Gemini API free tier, subject to quota.
+    model=os.getenv("GEMINI_MODEL", "gemini-2.5-flash"),
+    api_key=os.getenv("GEMINI_API_KEY"),
+    temperature=float(os.getenv("GEMINI_TEMPERATURE", "0.4")),
 )
 
 embeddings = HuggingFaceEmbeddings(
@@ -94,9 +89,11 @@ prompt = ChatPromptTemplate.from_messages(
         (
             "system",
             "You are a concise and helpful assistant. Use a tool whenever it "
-            "is useful, especially for arithmetic. Use the retrieved context "
-            "when it is relevant, and say when the answer is not in it.\n\n"
-            "Retrieved context:\n{context}",
+            "is useful, especially for arithmetic. The retrieved context is "
+            "supplementary personal knowledge: use it when it is relevant, but "
+            "answer general-knowledge questions using your own knowledge. Do "
+            "not claim you cannot answer merely because it is absent from the "
+            "retrieved context.\n\nRetrieved context:\n{context}",
         ),
         MessagesPlaceholder(variable_name="history"),
         ("human", "{question}"),

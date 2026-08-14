@@ -1,6 +1,6 @@
 langchain-core
+langchain-google-genai
 langchain-huggingface
-langchain-ollama
 langchain-text-splitters
 python-dotenv
 sentence-transformers
